@@ -13,9 +13,11 @@ class Child:
         dob = dt.date.fromisoformat(dob)
         years = today.year - dob.year
         months = today.month - dob.month
+        if today.day < dob.day:
+            months -= 1
         if months < 0:
             years -= 1
-            months *= -1
+            months = 12 + months
         return (years, months)
 
     

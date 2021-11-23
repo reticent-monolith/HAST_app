@@ -2,13 +2,17 @@ from src.hastmatrix import HASTMatrix
 from src.child import Child
 
 m = HASTMatrix()
-c = Child(["Ben"], "Jones", "2011-05-23")
-print(c.age)
-print(m.getScore(c.age, 54 ))
 
-# while True:
-#     years = input("Years: ")
-#     months = input("Months: ")
-#     mark = input("Mark: ")
-#     print("Result: " + m.getScore((int(years), int(months)), int(mark)))
-#     print()
+while True:
+    dob = input("Date of birth: ")
+    try:
+        c = Child(["test"], "child", dob)
+    except ValueError as e:
+        print("Bad date!")
+        continue
+    mark = int(input("Mark: "))
+    if mark > 65 or mark < 0:
+        print("Mark out of range (0 to 65)")
+        continue
+    print("Result: " + m.getScore(c.age, mark))
+    print()
