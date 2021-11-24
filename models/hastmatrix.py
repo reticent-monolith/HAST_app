@@ -26,7 +26,6 @@ class HASTMatrix:
         return str(scores[score])
 
     # Private
-
     def _generateScoresDict(self) -> dict:
         return {
             ((5, 0), (5, 3)):

@@ -1,11 +1,21 @@
 import datetime as dt
 
 class Child:
-    def __init__(self, firstNames: list[str], lastName: str, dob: str):
+    def __init__(
+            self, 
+            firstNames: list[str], 
+            lastName: str, 
+            dob: str, 
+            score1: int=None, 
+            score2: int=None, 
+            _id: int=None, 
+        ):
+        self._id = _id
         self.dob = dob
         self.firstNames = firstNames
         self.lastName = lastName
-        
+        self.score1 = score1
+        self.score2 = score2
         self.age = self.getAge(dob)
 
     def getAge(self, dob: str) -> tuple[int,int]:

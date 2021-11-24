@@ -1,18 +1,13 @@
-from src.hastmatrix import HASTMatrix
-from src.child import Child
+from models.child import Child
+from models.hastmatrix import HASTMatrix
+from models.childrepo import ChildRepo
+from gui.mainWindow import MainWindow
+from PyQt6.QtWidgets import QApplication
+import sys
 
 m = HASTMatrix()
+cr = ChildRepo()
 
-while True:
-    dob = input("Date of birth: ")
-    try:
-        c = Child(["test"], "child", dob)
-    except ValueError as e:
-        print("Bad date!")
-        continue
-    mark = int(input("Mark: "))
-    if mark > 65 or mark < 0:
-        print("Mark out of range (0 to 65)")
-        continue
-    print("Result: " + m.getScore(c.age, mark))
-    print()
+app = QApplication([])
+gui = MainWindow(m, cr)
+sys.exit(app.exec())
