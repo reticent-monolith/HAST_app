@@ -3,11 +3,11 @@ import datetime as dt
 class Child:
     def __init__(
             self, 
-            firstNames: list[str], 
+            firstNames: str, 
             lastName: str, 
             dob: str, 
-            score1: int=None, 
-            score2: int=None, 
+            score1: str=None, 
+            score2: str=None, 
             _id: int=None, 
         ):
         self._id = _id

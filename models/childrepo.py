@@ -18,11 +18,12 @@ class ChildRepo:
             self._commit()
 
     def update(self, id: int, child: Child):
+        print(f"Running update {id} {child.__dict__}")
         with closing(self.conn.cursor()) as c:
             c.execute(
                 "UPDATE child SET firstNames = ?, lastName = ?, dateOfBirth = ?, score1 = ?, score2 = ? WHERE id = ?",
                 (
-                    ' '.join(child.firstNames),
+                    child.firstNames,
                     child.lastName, 
                     child.dob,
                     child.score1,
@@ -66,7 +67,7 @@ class ChildRepo:
 
     def _deserialize(self, data: tuple) -> Child:
         args = {
-            "firstNames": data[1].split(' '),
+            "firstNames": data[1],
             "lastName": data[2],
             "dob": data[3],
             "_id": data[0],
@@ -79,7 +80,7 @@ class ChildRepo:
     
     def _serialize(self, child: Child) -> dict:
         serialized = {
-            "firstNames": ' '.join(child.firstNames),
+            "firstNames": child.firstNames,
             "lastName": child.lastName,
             "dob": child.dob
         }
