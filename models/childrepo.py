@@ -18,16 +18,15 @@ class ChildRepo:
             self._commit()
 
     def update(self, id: int, child: Child):
-        print(f"Running update {id} {child.__dict__}")
         with closing(self.conn.cursor()) as c:
             c.execute(
-                "UPDATE child SET firstNames = ?, lastName = ?, dateOfBirth = ?, score1 = ?, score2 = ? WHERE id = ?",
+                "UPDATE child SET firstNames = ?, lastName = ?, dateOfBirth = ?, score1 = ?, spellingAge = ? WHERE id = ?",
                 (
                     child.firstNames,
                     child.lastName, 
                     child.dob,
                     child.score1,
-                    child.score2,
+                    str(child.spellingAge) if child.spellingAge else None,
                     id
                 )
             )
@@ -54,14 +53,14 @@ class ChildRepo:
                 "SELECT * FROM child WHERE id = ?",
                 (id,)
             ).fetchone()
-        return child
+        return self._deserialize(child)
 
 # Private:
     def _createTable(self):
         with closing(self.conn.cursor()) as c:
             c = self.conn.cursor()
             c.execute(
-                "CREATE TABLE IF NOT EXISTS child (id INTEGER PRIMARY KEY, firstNames TEXT, lastName TEXT, dateOfBirth TEXT, score1 TEXT, score2 TEXT);"
+                "CREATE TABLE IF NOT EXISTS child (id INTEGER PRIMARY KEY, firstNames TEXT, lastName TEXT, dateOfBirth TEXT, score1 TEXT, spellingAge TEXT);"
             )
             self._commit()
 
@@ -72,8 +71,13 @@ class ChildRepo:
             "dob": data[3],
             "_id": data[0],
             "score1": data[4],
-            "score2": data[5]
+            "spellingAge": data[5]
         }
+        if data[5] != None:
+            args["spellingAge"] = (
+                int(data[5].strip('(').strip(')').split(',')[0].strip()),
+                int(data[5].strip('(').strip(')').split(',')[1].strip()),
+            )
         # Probably need to do something with the scores in here...
         child = Child(**args)
         return child

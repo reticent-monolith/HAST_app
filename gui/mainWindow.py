@@ -1,29 +1,29 @@
-from PyQt6.QtCore import QDate
-from PyQt6.QtWidgets import QDateEdit, QDial, QDialog, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMainWindow, QPushButton, QTableView, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
+from PyQt6.QtCore import QDate, Qt
+from PyQt6.QtGui import QIcon, QIntValidator
+from PyQt6.QtWidgets import QDateEdit, QDialog, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMainWindow, QPushButton, QSizePolicy, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
 from models.child import Child
 from models.childrepo import ChildRepo
-from gui.childItem import ChildItem
 import datetime as dt
+import hast
+
+
 
 class MainWindow(QMainWindow):
-    def __init__(self, matrix, repo: ChildRepo):
+    def __init__(self, repo: ChildRepo):
         super().__init__()
         self.repo = repo
-        self.matrix = matrix
-
+        self.children = []
         self.setWindowTitle("HAST Scorer")
-        self.resize(800,600)
+        self.resize(900,600)
+        self.setWindowIcon(QIcon("./icons/exam.png"))
         self.layout = QVBoxLayout()
         self.centralWidget = QWidget()
         self.centralWidget.setLayout(self.layout)
         self.setCentralWidget(self.centralWidget)
-
         self.setupButtonArea()
         self.setupTable()
-
         self.connectButtons()
         self.populateTable()
-
         self.show()
 
     def setupButtonArea(self):
@@ -38,6 +38,12 @@ class MainWindow(QMainWindow):
             "addChild": QPushButton("Add child")
         }
         for widget in self.buttonArea.values():
+            if type(widget) in (QLineEdit,):
+                widget.setFixedWidth(200)
+            if type(widget) in (QDateEdit,):
+                widget.setFixedWidth(100)
+            if type(widget) in (QLabel,):
+                widget.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(widget)
         date: QDateEdit = self.buttonArea["dob"]
         currentDate = dt.date.today()
@@ -48,95 +54,62 @@ class MainWindow(QMainWindow):
     def connectButtons(self):
         btn_addChild: QPushButton = self.buttonArea.get("addChild")
         btn_addChild.clicked.connect(self.addChild)
-        self.table.itemDoubleClicked.connect(self.openEditDialog)
-
-    def openEditDialog(self, info: ChildItem):
-        columns = {
-            0: {"dataName": "firstNames", "humanName": "first names"},
-            1: {"dataName": "lastName", "humanName": "last name"},
-            2: {"dataName": "dob", "humanName": "date of birth"},
-            3: {"dataName": "score1", "humanName": "first score"},
-            4: {"dataName": "score2", "humanName": "second score"}
-        }
-        dialog = QDialog()
-        layout = QVBoxLayout()
-        dialog.setLayout(layout)
-        editingField = columns[info.column()]
-        lineEdit = QLineEdit()
-        layout.addWidget(lineEdit)
-        if info.column() in (0,1,2):
-            dialog.setWindowTitle(f"Edit {editingField['humanName']}")
-            lineEdit.setText(info.child.__dict__[editingField["dataName"]])
-            updateButton = QPushButton("Update")
-            layout.addWidget(updateButton)
-            updateButton.clicked.connect(lambda: self.updateChild(editingField, lineEdit, info, dialog))
-        else:
-            dialog.setWindowTitle(f"Generate new {editingField['humanName']}")
-            generateButton = QPushButton("Generate")
-            layout.addWidget(generateButton)
-            generateButton.clicked.connect(
-                lambda: self.generateChildScore(editingField, lineEdit, info, dialog))
-        dialog.exec()
-
-    def updateChild(self, field: dict, lineEdit: QLineEdit, item: ChildItem, d: QDialog):
-        oldChild = item.child
-        args = {k:v for k,v in oldChild.__dict__.items() if k != "age"}
-        args[field["dataName"]] = lineEdit.text()
-        newChild = Child(**args)
-        self.repo.update(newChild._id, newChild)
-        self.populateTable()
-        d.close()
-
-    def generateChildScore(self, field: dict, lineEdit: QLineEdit, item: ChildItem, d: QDialog):
-        testScore = int(lineEdit.text())
-        child = item.child
-        score = self.matrix.getScore(child.age, testScore)
-        args = {k: v for k, v in child.__dict__.items() if k != "age"}
-        args[field["dataName"]] = score
-        newChild = Child(**args)
-        self.repo.update(child._id, newChild)
-        self.populateTable()
-        d.close()
-        
 
     def setupTable(self):
-        self.table = QTableWidget(0, 6)
+        self.table = QTableWidget(0, 7)
         self.layout.addWidget(self.table)
         self.table.setHorizontalHeaderLabels([
             "First Names",
             "Surname",
             "Date of birth",
-            "Score 1",
-            "Score 2",
+            "Age",
+            "HAST Score 1",
+            "Spelling age",
             ""
         ])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.horizontalHeader()
         # self.table.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
+        self.table.verticalHeader().setVisible(False)
 
     
     def populateTable(self):
         self.table.setRowCount(0)
         for i, child in enumerate(self.repo.getAll()):
+            self.children.append(child)
             self.table.insertRow(i)
             col = 0
-            item = ChildItem(child.firstNames, child)
+            item = QTableWidgetItem(child.firstNames)
             self.table.setItem(i, col, item)
             col = 1
-            item = ChildItem(child.lastName, child)
+            item = QTableWidgetItem(child.lastName)
             self.table.setItem(i, col, item)
             col = 2
-            item = ChildItem(child.dob, child)
+            item = QTableWidgetItem(child.dob)
             self.table.setItem(i, col, item)
             col = 3
-            item = ChildItem(child.score1, child)
+            stringAge = f"{child.age[0]} years {child.age[1]} months"
+            item = QTableWidgetItem(stringAge)
             self.table.setItem(i, col, item)
             col = 4
-            item = ChildItem(child.score2, child)
+            item = QTableWidgetItem(child.score1)
             self.table.setItem(i, col, item)
             col = 5
+            stringAge = f"{child.spellingAge[0]} years {child.spellingAge[1]} months" if child.spellingAge != None else ""
+            item = QTableWidgetItem(stringAge)
+            self.table.setItem(i, col, item)
+            col = 6
+            scoreBtn = QPushButton("Score")
+            self.connectButtonToChild(child._id, scoreBtn, "score")
             delBtn = QPushButton("Delete")
-            delBtn.clicked.connect(lambda: self.deleteChild(child._id))
-            self.table.setCellWidget(i, col, delBtn)
+            self.connectButtonToChild(child._id, delBtn, "delete")
+            btnWidget = QWidget()
+            btnL = QHBoxLayout()
+            btnL.setContentsMargins(0,0,0,0)
+            btnL.addWidget(scoreBtn)
+            btnL.addWidget(delBtn)
+            btnWidget.setLayout(btnL)
+            self.table.setCellWidget(i, col, btnWidget)
 
     def addChild(self):
         b = self.buttonArea
@@ -153,6 +126,66 @@ class MainWindow(QMainWindow):
         self.clearInputs()
         self.populateTable()
 
+    def scoreChild(self, id: int):
+        child = self.repo.get(id)
+        # create dialog with mark entry, generate button, save button, cancel button, and display for child data
+        d = QDialog()
+        d.setWindowIcon(QIcon("./icons/exam.png"))
+        d.setWindowTitle(f"Add score for {child.firstNames} {child.lastName}")
+        lay = QVBoxLayout()
+        d.setLayout(lay)
+        display = [
+            (QLabel("Name: "), QLabel(f"{child.firstNames} {child.lastName}")),
+            (QLabel("Date of birth: "), QLabel(child.dob)),
+            (QLabel("Age: "), QLabel(f"{child.age[0]} years {child.age[1]} months")),
+            (QLabel("HAST Score: "), QLabel(child.score1)),
+        ]
+        # Because you can't subscript None
+        if child.spellingAge != None: 
+            display.append((QLabel("Spelling age: "), QLabel(
+                f"{child.spellingAge[0]} years {child.spellingAge[1]} months")))
+        else:
+            display.append((QLabel("Spelling age: "), QLabel(None)))
+        for label, value in display:
+            row = QHBoxLayout()
+            row.setSpacing(5)
+            row.addWidget(label)
+            row.addWidget(value)
+            lay.addLayout(row)
+        row = QHBoxLayout()
+        markEdit = QLineEdit()
+        markEdit.setValidator(QIntValidator(0, 65))
+        markEdit.setPlaceholderText("Mark")
+        genBtn = QPushButton("Generate")
+        row.addWidget(markEdit)
+        row.addWidget(genBtn)
+        lay.addLayout(row)
+        # generate button runs hast.getScore() using passed in child data and updates copied child object
+        def generateScores(mark: int):
+            try:
+                score = hast.getScore(child.age, mark)
+                spellingAge = hast.getSpellingAge(mark)
+            except Exception as e:
+                print(e)
+                return
+            child.score1 = score
+            child.spellingAge = spellingAge
+            print(child.__dict__)
+            # refresh
+            display[3][1].setText(child.score1)
+            display[4][1].setText(f"{child.spellingAge[0]} years {child.spellingAge[1]} months")
+            markEdit.setText("")
+        genBtn.clicked.connect(lambda: generateScores(int(markEdit.text())))
+        # save button pushes the child copy to the database to update the existing child
+        saveBtn = QPushButton("Save")
+        lay.addWidget(saveBtn)
+        saveBtn.clicked.connect(lambda: self.repo.update(child._id, child))
+        saveBtn.clicked.connect(d.close)
+        #   call populateTable()
+        # cancel button just closes the dialog without any updates
+        d.exec()
+        self.populateTable()
+
     def deleteChild(self, childId):
         self.repo.delete(childId)
         self.populateTable()
@@ -161,3 +194,10 @@ class MainWindow(QMainWindow):
         for widget in self.buttonArea.values():
             if type(widget) == QLineEdit:
                 widget.setText("")
+
+    def connectButtonToChild(self, childId: int, button: QPushButton, func: str):
+        """Because of lazy lambdas again..."""
+        if func == "score":
+            button.clicked.connect(lambda: self.scoreChild(childId))
+        elif func == "delete":
+            button.clicked.connect(lambda: self.deleteChild(childId))

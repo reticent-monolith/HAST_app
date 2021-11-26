@@ -1,37 +1,10 @@
 def lPad(n: int) -> list[str]:
     return (n*'<60,').split(',')[:-1]
 
-
 def hPad(n: int) -> list[str]:
     return (n*'>140,').split(',')[:-1]
 
-
-class HASTMatrix:
-    def __init__(self):
-        self._scores = self._generateScoresDict()
-
-    # Public
-    def getScore(self, age: tuple[int, int], score: int) -> str:
-        """Age is a tuple of the child's age (years (5-59),0-indexed months).
-        Score is the score from the test.
-        Returns the string score from the matrix, from '<60' to '>140'."""
-        # find the correct key in the scores dictionary
-        scores = None
-        found = False
-        for ageKey, scoresList in self._scores.items():
-            lower, upper = ageKey
-            if lower[0] == age[0] and age[1] in range(lower[1], upper[1]+1):
-                scores = scoresList
-                break
-        return str(scores[score])
-
-    @staticmethod
-    def getSpellingAge(childAge: tuple):
-        pass
-
-    # Private
-    def _generateScoresDict(self) -> dict:
-        return {
+standardizedScoreMatrix = {
             ((5, 0), (5, 3)):
                 ['<84', 85, 88, 91, 93, 96, 99, 101, 104, 107, 109, 112, 115,
                     117, 120, 123, 125, 128, 131, 133, 136, 139, '>140']+hPad(43),
@@ -96,3 +69,30 @@ class HASTMatrix:
                 lPad(26)+['<60', 60, 63, 65, 68, 70, 72, 75, 77, 79, 82, 84, 86, 89, 91, 94, 96, 98, 101, 103,
                           105, 108, 110, 112, 115, 117, 119, 122, 124, 127, 129, 131, 134, 136, 138, '>140']+hPad(4)
         }
+
+spellingAge = [  # Might need a more complex structure, can't remember the sheet...
+    (5, 0),
+]
+
+def getScore(age: tuple[int, int], mark: int) -> str:
+    """Age is a tuple of the child's age (years (5-59),0-indexed months).
+    Score is the score from the test.
+    Returns the string score from the matrix, from '<60' to '>140'."""
+    # find the correct key in the scores dictionary
+    if mark < 0:
+        raise Exception(f"[{mark}] is an invalid mark for the test")
+    scores = None
+    found = False
+    for ageKey, scoresList in standardizedScoreMatrix.items():
+        lower, upper = ageKey
+        if lower[0] == age[0] and age[1] in range(lower[1], upper[1]+1):
+            scores = scoresList
+            break
+    try:
+        score = str(scores[mark])
+        return score 
+    except IndexError:
+        raise Exception(f"[{mark}] is an invalid mark for the test")
+
+def getSpellingAge(mark: int) -> tuple[int, int]:
+    return (8, 5)

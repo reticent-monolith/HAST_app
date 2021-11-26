@@ -7,16 +7,16 @@ class Child:
             lastName: str, 
             dob: str, 
             score1: str=None, 
-            score2: str=None, 
+            spellingAge: str=None, 
             _id: int=None, 
         ):
-        self._id = _id
-        self.dob = dob
-        self.firstNames = firstNames
-        self.lastName = lastName
-        self.score1 = score1
-        self.score2 = score2
-        self.age = self.getAge(dob)
+        self._id: int = _id
+        self.dob: str = dob
+        self.firstNames: str = firstNames
+        self.lastName: str = lastName
+        self.score1: str = score1
+        self.age: tuple[int, int] = self.getAge(dob)
+        self.spellingAge: str = spellingAge
 
     def getAge(self, dob: str) -> tuple[int,int]:
         today = dt.date.today()
