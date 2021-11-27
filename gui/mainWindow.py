@@ -170,7 +170,6 @@ class MainWindow(QMainWindow):
                 return
             child.score1 = score
             child.spellingAge = spellingAge
-            print(child.__dict__)
             # refresh
             display[3][1].setText(child.score1)
             display[4][1].setText(f"{child.spellingAge[0]} years {child.spellingAge[1]} months")
