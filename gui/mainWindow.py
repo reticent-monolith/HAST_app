@@ -63,8 +63,8 @@ class MainWindow(QMainWindow):
             "Surname",
             "Date of birth",
             "Age",
-            "HAST Score 1",
             "Spelling age",
+            "HAST Score",
             ""
         ])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -91,10 +91,10 @@ class MainWindow(QMainWindow):
             stringAge = f"{child.age[0]} years {child.age[1]} months"
             item = QTableWidgetItem(stringAge)
             self.table.setItem(i, col, item)
-            col = 4
+            col = 5
             item = QTableWidgetItem(child.score1)
             self.table.setItem(i, col, item)
-            col = 5
+            col = 4
             stringAge = f"{child.spellingAge[0]} years {child.spellingAge[1]} months" if child.spellingAge != None else ""
             item = QTableWidgetItem(stringAge)
             self.table.setItem(i, col, item)
@@ -161,12 +161,13 @@ class MainWindow(QMainWindow):
         row.addWidget(genBtn)
         lay.addLayout(row)
         # generate button runs hast.getScore() using passed in child data and updates copied child object
-        def generateScores(mark: int):
+        def generateScores(mark: str):
             try:
+                mark = int(mark)
                 score = hast.getScore(child.age, mark)
                 spellingAge = hast.getSpellingAge(mark)
             except Exception as e:
-                print(e)
+                print(e)  # TODO show an error popup
                 return
             child.score1 = score
             child.spellingAge = spellingAge
@@ -174,7 +175,7 @@ class MainWindow(QMainWindow):
             display[3][1].setText(child.score1)
             display[4][1].setText(f"{child.spellingAge[0]} years {child.spellingAge[1]} months")
             markEdit.setText("")
-        genBtn.clicked.connect(lambda: generateScores(int(markEdit.text())))
+        genBtn.clicked.connect(lambda: generateScores(markEdit.text()))
         # save button pushes the child copy to the database to update the existing child
         saveBtn = QPushButton("Save")
         lay.addWidget(saveBtn)
